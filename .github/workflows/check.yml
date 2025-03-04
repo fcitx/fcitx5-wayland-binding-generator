@@ -1,0 +1,46 @@
+name: CI
+on:
+  push:
+    branches:
+     - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  clang-format:
+    name: Check clang-format
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm git clang diffutils
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+      - uses: actions/checkout@v4
+      - uses: fcitx/github-actions@clang-format
+  check:
+    name: Build and test
+    needs: clang-format
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+        include:
+          - compiler: gcc
+            cxx_compiler: g++
+          - compiler: clang
+            cxx_compiler: clang++
+    env:
+      CC: ${{ matrix.compiler }}
+      CXX: ${{ matrix.cxx_compiler }}
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm base-devel clang cmake ninja extra-cmake-modules qt6-base ktexttemplate
+      - uses: actions/checkout@v4
+      - name: Build and Install fcitx5-configtool
+        uses: fcitx/github-actions@cmake
+        with:
+          path: .

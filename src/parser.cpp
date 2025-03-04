@@ -18,18 +18,18 @@
  */
 
 #include "parser.h"
-#include <list>
-#include <memory>
-#include <utility>
+#include "protocol.h"
 #include <QDebug>
 #include <QFile>
+#include <QLoggingCategory>
+#include <QStringView>
 #include <QXmlStreamReader>
 #include <QtLogging>
+#include <list>
+#include <memory>
 #include <qdebug.h>
 #include <qlogging.h>
-#include <QStringView>
-#include <QLoggingCategory>
-#include "protocol.h"
+#include <utility>
 
 Q_DECLARE_LOGGING_CATEGORY(generator);
 
@@ -78,7 +78,8 @@ void ParseContext::startElement(QStringView element_name,
             bool ok = false;
             version = att.value().toUInt(&ok);
             if (!ok) {
-                qCCritical(generator) << "wrong version (" << att.value() << ")";
+                qCCritical(generator)
+                    << "wrong version (" << att.value() << ")";
             }
         }
         if (att.name() == "type") {
@@ -151,8 +152,9 @@ void ParseContext::startElement(QStringView element_name,
             if (!ok) {
                 qCCritical(generator) << "invalid integer (" << since << ")";
             } else if (version > interface_->version_) {
-                qCCritical(generator) << "since (" << version << ") larger than version ("
-                         << interface_->version_ << ")";
+                qCCritical(generator)
+                    << "since (" << version << ") larger than version ("
+                    << interface_->version_ << ")";
             }
         } else {
             version = 1;
@@ -165,7 +167,8 @@ void ParseContext::startElement(QStringView element_name,
         message_->since_ = version;
 
         if (name == "destroy" && !message_->destructor_) {
-            qCCritical(generator) << "destroy request should be destructor type";
+            qCCritical(generator)
+                << "destroy request should be destructor type";
         }
     } else if (element_name == "arg") {
         if (name.isEmpty()) {
@@ -187,7 +190,8 @@ void ParseContext::startElement(QStringView element_name,
             break;
         default:
             if (!interface_name.isEmpty()) {
-                qCCritical(generator) << "interface attribute not allowed for type " << type;
+                qCCritical(generator)
+                    << "interface attribute not allowed for type " << type;
             }
             break;
         }
@@ -198,13 +202,15 @@ void ParseContext::startElement(QStringView element_name,
             } else if (allow_null == "false") {
                 arg->nullable_ = false;
             } else {
-                qCCritical(generator) << "invalid value for allow-null attribute ("
-                         << allow_null << ")";
+                qCCritical(generator)
+                    << "invalid value for allow-null attribute (" << allow_null
+                    << ")";
             }
 
             if (!arg->isNullableType()) {
-                qCCritical(generator) << "allow-null is only valid for objects, strings, "
-                            "and arrays";
+                qCCritical(generator)
+                    << "allow-null is only valid for objects, strings, "
+                       "and arrays";
             }
         }
 
@@ -223,9 +229,10 @@ void ParseContext::startElement(QStringView element_name,
         } else if (bitfield == "true") {
             enumeration_->bitfield_ = true;
         } else {
-            qCCritical(generator) << "invalid value (" << bitfield
-                     << ") for bitfield attribute (only true/false "
-                        "are accepted)";
+            qCCritical(generator)
+                << "invalid value (" << bitfield
+                << ") for bitfield attribute (only true/false "
+                   "are accepted)";
         }
     } else if (element_name == "entry") {
         if (name.isEmpty()) {
@@ -239,9 +246,9 @@ void ParseContext::startElement(QStringView element_name,
     }
 }
 
-void ParseContext::verifyArguments(Interface *interface,
-                                   std::list<Message> *messages,
-                                   std::list<Enumeration> * /*enumerations*/) const {
+void ParseContext::verifyArguments(
+    Interface *interface, std::list<Message> *messages,
+    std::list<Enumeration> * /*enumerations*/) const {
     for (auto &m : *messages) {
         for (auto &a : m.argList_) {
 
@@ -249,23 +256,27 @@ void ParseContext::verifyArguments(Interface *interface,
                 continue;
             }
 
-            const auto *e = protocol_->findEnumeration(interface, a.enumerationName_);
+            const auto *e =
+                protocol_->findEnumeration(interface, a.enumerationName_);
 
             if (!e) {
-                qCCritical(generator) << "could not find enumeration " << a.enumerationName_;
+                qCCritical(generator)
+                    << "could not find enumeration " << a.enumerationName_;
             }
 
             switch (a.type_) {
             case INT:
                 if (e->bitfield_) {
-                    qCCritical(generator) << "bitfield-style enum must only be referenced "
-                                "by uint";
+                    qCCritical(generator)
+                        << "bitfield-style enum must only be referenced "
+                           "by uint";
                 }
                 break;
             case UNSIGNED:
                 break;
             default:
-                qCCritical(generator) << "enumeration-style argument has wrong type";
+                qCCritical(generator)
+                    << "enumeration-style argument has wrong type";
             }
         }
     }
@@ -290,7 +301,8 @@ void ParseContext::endElement(QStringView name) {
         message_ = nullptr;
     } else if (name == "enum") {
         if (enumeration_->entryList_.empty()) {
-            qCCritical(generator) << "enumeration " << enumeration_->name_ << " was empty";
+            qCCritical(generator)
+                << "enumeration " << enumeration_->name_ << " was empty";
         }
         enumeration_ = nullptr;
     } else if (name == "protocol") {

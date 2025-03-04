@@ -6,11 +6,8 @@
  */
 
 #include "protocol.h"
-#include <algorithm>
-#include <iostream>
-#include <list>
-#include <set>
-#include <vector>
+#include "parser.h"
+#include "utils.h"
 #include <KTextTemplate/Context>
 #include <KTextTemplate/Engine>
 #include <KTextTemplate/FileSystemTemplateLoader>
@@ -26,9 +23,12 @@
 #include <QVariant>
 #include <QVariantHash>
 #include <QtLogging>
+#include <algorithm>
+#include <iostream>
+#include <list>
 #include <qbytearrayview.h>
-#include "parser.h"
-#include "utils.h"
+#include <set>
+#include <vector>
 
 using namespace Qt::Literals::StringLiterals;
 

@@ -7,10 +7,10 @@
 #ifndef _GENERATOR_UTILS_H_
 #define _GENERATOR_UTILS_H_
 
+#include <QString>
 #include <cctype>
 #include <climits>
 #include <cstdarg>
-#include <QString>
 #include <qtypes.h>
 
 struct Location {
