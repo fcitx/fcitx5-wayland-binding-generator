@@ -21,7 +21,7 @@ struct Interface;
 struct Description;
 
 struct ParseContext {
-    ParseContext(Protocol *protocol, const QString &filename);
+    ParseContext(Protocol *protocol, const QString &filename, bool main);
 
     ~ParseContext();
 
@@ -41,6 +41,7 @@ struct ParseContext {
         return loc_;
     }
 
+    bool main_;
     QXmlStreamReader reader_;
     QFile input_;
     Location loc_;
@@ -48,7 +49,6 @@ struct ParseContext {
     Interface *interface_ = nullptr;
     Message *message_ = nullptr;
     Enumeration *enumeration_ = nullptr;
-    Description *description_ = nullptr;
     QString characterData_;
 };
 

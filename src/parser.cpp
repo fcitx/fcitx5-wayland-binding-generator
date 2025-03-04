@@ -35,8 +35,9 @@ Q_DECLARE_LOGGING_CATEGORY(generator);
 
 #define XML_BUFFER_SIZE 4096
 
-ParseContext::ParseContext(Protocol *protocol, const QString &filename)
-    : protocol_(protocol) {
+ParseContext::ParseContext(Protocol *protocol, const QString &filename,
+                           bool main)
+    : protocol_(protocol), main_(main) {
 
     if (filename.isEmpty()) {
 
@@ -124,7 +125,7 @@ void ParseContext::startElement(QStringView element_name,
             qCCritical(generator) << "no interface version given";
         }
 
-        protocol_->interfaces_.emplace_back(loc_, name, version);
+        protocol_->interfaces_.emplace_back(loc_, name, version, main_);
         interface_ = &protocol_->interfaces_.back();
     } else if (element_name == "request" || element_name == "event") {
         if (name.empty()) {
@@ -137,11 +138,11 @@ void ParseContext::startElement(QStringView element_name,
         } else {
             messageList = &interface_->eventsList_;
         }
-        messageList->emplace_back(loc_, name);
+        messageList->emplace_back(name);
         message_ = &messageList->back();
 
         if (type == "destructor") {
-            message_->destructor_ = 1;
+            message_->destructor_ = true;
         }
 
         if (!since.isEmpty()) {
@@ -235,25 +236,6 @@ void ParseContext::startElement(QStringView element_name,
         entry = &enumeration_->entryList_.back();
 
         entry->summary_ = summary.toString();
-    } else if (element_name == "description") {
-        if (summary.isEmpty()) {
-            qCCritical(generator) << "description without summary";
-        }
-
-        std::unique_ptr<Description> description =
-            std::make_unique<Description>();
-        description_ = description.get();
-        description->summary = summary.toString();
-
-        if (message_) {
-            message_->description_ = std::move(description);
-        } else if (enumeration_) {
-            enumeration_->description_ = std::move(description);
-        } else if (interface_) {
-            interface_->description_ = std::move(description);
-        } else {
-            protocol_->description_ = std::move(description);
-        }
     }
 }
 
@@ -293,8 +275,17 @@ void ParseContext::endElement(QStringView name) {
     if (name == "copyright") {
         protocol_->copyright_ = characterData_;
     } else if (name == "description") {
-        description_->text = characterData_;
-        description_ = nullptr;
+        Description description;
+        description.text = characterData_;
+        if (message_) {
+            message_->description_ = std::move(description);
+        } else if (enumeration_) {
+            enumeration_->description_ = std::move(description);
+        } else if (interface_) {
+            interface_->description_ = std::move(description);
+        } else {
+            protocol_->description_ = std::move(description);
+        }
     } else if (name == "request" || name == "event") {
         message_ = nullptr;
     } else if (name == "enum") {

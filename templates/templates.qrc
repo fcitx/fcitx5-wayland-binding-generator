@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file>object.cpp.template</file>
+        <file>object.h.template</file>
+    </qresource>
+</RCC>

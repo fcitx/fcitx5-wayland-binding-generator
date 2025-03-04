@@ -1,0 +1,49 @@
+#ifndef {{ upperName }}_H_
+#define {{ upperName }}_H_
+#include <wayland-client.h>
+#include <wayland-util.h>
+#include <cstdint>
+#include "fcitx-utils/misc.h"
+{% if eventsList|length > 0 %}#include "fcitx-utils/signals.h"
+{% endif %}{% if waylandClientProtocolHeader %}#include "{{ waylandClientProtocolHeader }}"  // IWYU pragma: export
+{% endif %}{% for extraInclude in extraIncludes %}#include "{{ extraInclude }}"
+{% endfor %}{% if namespace %}namespace {{ namespace }} {
+{% endif %}
+{% for forwardType in forwardTypes %}class {{ forwardType }};
+{% endfor %}
+class {{ camelName }} final {
+public:
+    static constexpr const char *interface = "{{ name }}";
+    static constexpr const wl_interface *const wlInterface = &{{ name }}_interface;
+    static constexpr const uint32_t version = {{ version }};
+    using wlType = {{ name }};
+    operator {{ name }} *() { return data_.get(); }
+    {{ camelName }}(wlType *data);
+    {{ camelName }}({{ camelName }} &&other) noexcept = delete;
+    {{ camelName }} &operator=({{ camelName }} &&other) noexcept = delete;
+    auto actualVersion() const { return version_; }
+    void *userData() const { return userData_; }
+    void setUserData(void *userData) { userData_ = userData; }
+{% for request in requestsList %}{% if not request.destructor %}{% if request.requestReturnType == "T *" %}
+template <typename T>
+{{ request.requestReturnType }} {{ request.lowerCamelName }}({{ request.requestArgumentSignature }}) {
+    return new T(static_cast<typename T::wlType *>({{ name }}_{{ request.name }}(*this{{ request.requestArgument }})));
+}
+{% else %}    {{ request.requestReturnType }}{{ request.lowerCamelName }}({{ request.requestArgumentSignature }});
+{% endif %}{% endif %}{% endfor %}
+{% for event in eventsList %}    auto &{{ event.lowerCamelName }}() { return {{ event.lowerCamelName }}Signal_; }
+{% endfor %}
+private:
+    static void destructor({{ name }} *);
+{% if eventsList|length > 0 %}    static const struct {{ name }}_listener listener;{% endif %}
+{% for event in eventsList %}    fcitx::Signal<{{ event.eventReturnType }}({{ event.eventArgumentSignature }})> {{ event.lowerCamelName }}Signal_;
+{% endfor %}
+    uint32_t version_;
+    void *userData_ = nullptr;
+    UniqueCPtr<{{ name }}, &destructor> data_;
+};
+static inline {{ name }} *rawPointer({{ camelName }} *p) { return p ? static_cast<{{ name }}*>(*p) : nullptr; }
+{% if namespace %}
+}  // namespace {{ namespace }}
+{% endif %}
+#endif  // {{ upperName }}_H_

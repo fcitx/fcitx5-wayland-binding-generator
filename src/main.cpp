@@ -6,13 +6,15 @@
  */
 
 #include <cstdlib>
-#include "protocol.h"
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QLatin1String>
 #include <QLoggingCategory>
 #include <QtLogging>
-#include <QLatin1String>
+#include <ktexttemplate/metatype.h>
+#include <qcontainerfwd.h>
+#include "protocol.h"
 
 Q_LOGGING_CATEGORY(generator, "generator");
 
@@ -38,7 +40,8 @@ int main(int argc, char *argv[]) {
   parser.addOption(
       QCommandLineOption("directory", "Output directory.", "directory", "."));
   parser.addHelpOption();
-  parser.addPositionalArgument("files", "Input files.", "[files...]");
+  parser.addPositionalArgument("files", "Input files.",
+                               "[deps_protocol_file] main_protocol_file");
   parser.process(app);
 
   EmitOptions options;
@@ -52,9 +55,12 @@ int main(int argc, char *argv[]) {
 
   const auto filenames = parser.positionalArguments();
 
+  KTextTemplate::registerMetaType<Message>();
+  KTextTemplate::registerMetaType<Message *>();
+  KTextTemplate::registerMetaType<Argument>();
+
   Protocol protocol(filenames);
-  protocol.emitHeader(options);
-  protocol.emitSource(options);
+  protocol.generate(options);
 
   return 0;
 }
