@@ -7,18 +7,18 @@
 #ifndef _GENERATOR_PROTOCOL_H_
 #define _GENERATOR_PROTOCOL_H_
 
-#include <list>
-#include <memory>
-#include <optional>
-#include <set>
-#include <utility>
+#include "utils.h"
 #include <KTextTemplate/MetaType>
 #include <KTextTemplate/TypeAccessor>
 #include <QMetaType>
 #include <QString>
 #include <QStringList>
 #include <QStringView>
-#include "utils.h"
+#include <list>
+#include <memory>
+#include <optional>
+#include <set>
+#include <utility>
 
 struct Message;
 struct Enumeration;

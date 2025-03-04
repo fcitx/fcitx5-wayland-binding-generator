@@ -7,12 +7,12 @@
 #ifndef _GENERATOR_PARSER_H_
 #define _GENERATOR_PARSER_H_
 
-#include <list>
 #include "protocol.h"
 #include "utils.h"
-#include <QXmlStreamReader>
 #include <QFile>
 #include <QStringView>
+#include <QXmlStreamReader>
+#include <list>
 
 struct Protocol;
 struct Message;
@@ -27,19 +27,16 @@ struct ParseContext {
 
     void parse();
 
-    void verifyArguments(Interface *interface, std::list<Message> *messages, std::list<Enumeration> *enumerations) const;
+    void verifyArguments(Interface *interface, std::list<Message> *messages,
+                         std::list<Enumeration> *enumerations) const;
 
     void startElement(QStringView name, const QXmlStreamAttributes &atts);
     void endElement(QStringView name);
     void characterData(QStringView text);
 
-    void setLineNumber(int lineNumber) {
-        loc_.lineNumber_ = lineNumber;
-    }
+    void setLineNumber(int lineNumber) { loc_.lineNumber_ = lineNumber; }
 
-    const Location &location() const {
-        return loc_;
-    }
+    const Location &location() const { return loc_; }
 
     bool main_;
     QXmlStreamReader reader_;
