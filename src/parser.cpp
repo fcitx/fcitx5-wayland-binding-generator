@@ -161,7 +161,7 @@ void ParseContext::startElement(QStringView element_name,
         }
 
         if (version < interface_->since_) {
-            qCWarning(generator) << "since version not increasing";
+            qCWarning(generator) << "since version not increasing " << interface_->name_ << " " << name;
         }
         interface_->since_ = version;
         message_->since_ = version;

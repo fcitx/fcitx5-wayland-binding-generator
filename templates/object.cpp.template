@@ -26,17 +26,15 @@
 {% endif %}}
 
 void {{ camelName }}::destructor({{ name }} *data) {
-{% if destructors|length > 0 %}    const auto version = {{ name }}_get_version(data);
-{% endif %}{% if destructors|length == 1 and destructors.0.name == "destroy" %}    if (version >= {{ destructors.0.since }}) {
-        {{ name }}_{{ destructors.0.name }}(data);
-        return;
-    }
-{% else %}{% for destructor in destructors %}    if (version >= {{ destructor.since }}) {
+{% if destructors|length > 0 %}{% if destructor|length > 1 or destructors.0.name != "destroy" %}    const auto version = {{ name }}_get_version(data);
+{% endif %}{% endif %}{% for destructor in destructors %}{% if destructor.name != "destroy" %}#if defined({{ upperName }}_{{destructor.upperName}}_SINCE_VERSION)
+    if (version >= {{ destructor.since }}) {
         {{ name }}_{{ destructor.name }}(data);
         return;
     }
-{% endfor %}    {{ name }}_destroy(data);
-{% endif %}}
+#endif
+{% endif %}{% endfor %}    {{ name }}_destroy(data);
+}
 {% for request in requestsList %}{% if not request.destructor and request.requestReturnType != "T *" %}{{ request.requestReturnType }}{{ camelName }}::{{ request.lowerCamelName }}({{ request.requestArgumentSignature }}) {
     {% if request.isReturnTypeNewId %}return new {{ request.returnTypeObject }}({% endif %}{{ name }}_{{ request.name }}(*this{{ request.requestArgument }}){% if request.isReturnTypeNewId %}){% endif %};
 }
